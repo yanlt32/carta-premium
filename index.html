@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feliz Nosso Dia</title>
+    <link rel="icon" href="fts/coracao.png" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Tela principal -->
+    <h1>Para Minha Namorada 💖</h1>
+
+    <!-- Nova div com estilo e responsividade -->
+    <div class="message-container">
+        <p>Amor, desde que você entrou na minha vida, tudo ficou mais lindo. 💕</p>
+    </div>
+
+    <!-- Carrossel de Fotos Polaroid -->
+    <div class="carousel-container">
+        <div class="carousel">
+            <img src="fts/ft1.jpg" alt="Foto 1" class="active">
+            <img src="fts/ft2.jpg" alt="Foto 2">
+            <img src="fts/ft3.jpg" alt="Foto 3">
+            <img src="fts/ft4.jpg" alt="Foto 4">
+            <img src="fts/ft5.jpg" alt="Foto 5">
+            <img src="fts/ft6.jpg" alt="Foto 6">
+            <img src="fts/ft7.jpg" alt="Foto 7">
+            <img src="fts/ft8.jpg" alt="Foto 8">
+            <img src="fts/ft9.jpg" alt="Foto 9">
+            <img src="fts/ft10.jpg" alt="Foto 10">
+        </div>
+    </div>
+
+    <!-- Contador de Dias (Agora abaixo das fotos) -->
+    <div class="days-counter">
+        <h2>Contador de Dias 💕</h2>
+        <p id="days-counter">Estamos juntos há <span id="days-together"></span> dias!</p>
+    </div>
+
+    <!-- Botões para abrir os formulários de upload -->
+    <div class="buttons">
+        <button onclick="openModal('photo-modal')">Enviar Fotos 📸</button>
+        <button onclick="openModal('letter-modal')">Enviar Carta 💌</button>
+    </div>
+
+    <!-- Modal para Upload de Fotos -->
+    <div id="photo-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('photo-modal')">&times;</span>
+            <h2>Envie uma Foto 📸</h2>
+            <input type="file" id="photo-input" accept="image/*">
+            <button onclick="uploadPhoto()">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Modal para Upload de Carta -->
+    <div id="letter-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('letter-modal')">&times;</span>
+            <h2>Envie uma Carta 💌</h2>
+            <input type="text" id="letter-title" placeholder="Título da carta" />
+            <textarea id="letter-input" rows="5" placeholder="Escreva sua carta..."></textarea>
+            <button onclick="uploadLetter()">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Carta do Mês (Agora centralizada) -->
+    <div class="letter-of-the-month" style="text-align: center;">
+        <h2>Carta do Mês 💌</h2>
+        <div id="monthly-letter">
+            <p>Ainda não há uma carta do mês.</p>
+        </div>
+    </div>
+
+    <!-- Histórico de Cartas -->
+    <div class="letter-history">
+        <h2>Histórico de Cartas 📜</h2>
+        <div id="letter-history-controls">
+            <button onclick="toggleHistory()">Ver Histórico</button>
+        </div>
+        <div id="letter-history-list" style="display: none;">
+            <ul id="letter-history-content"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Função para abrir o modal
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        // Função para fechar o modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Simulação de upload de foto
+        function uploadPhoto() {
+            alert('Foto enviada com sucesso!');
+            closeModal('photo-modal');
+        }
+
+        // Função para enviar a carta
+        function uploadLetter() {
+            const letterTitle = document.getElementById('letter-title').value;
+            const letterContent = document.getElementById('letter-input').value;
+            if (letterContent.trim() === '') {
+                alert('Por favor, escreva uma carta antes de enviar!');
+                return;
+            }
+
+            const letterHistoryContent = document.getElementById('letter-history-content');
+            const newLetter = document.createElement('li');
+            newLetter.innerHTML = `
+                <div class="letter-card">
+                    <h3>${letterTitle ? letterTitle : 'Sem título'}</h3>
+                    <p>${letterContent}</p>
+                </div>
+            `;
+
+            document.getElementById('monthly-letter').innerHTML = `<p><strong>${letterTitle ? letterTitle : 'Sem título'}</strong>: ${letterContent}</p>`;
+
+            letterHistoryContent.appendChild(newLetter);
+            document.getElementById('letter-title').value = '';
+            document.getElementById('letter-input').value = '';
+            alert('Carta enviada com sucesso!');
+            closeModal('letter-modal');
+        }
+
+        // Função para alternar a visibilidade do histórico de cartas
+        function toggleHistory() {
+            const historyList = document.getElementById('letter-history-list');
+            historyList.style.display = historyList.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Carrossel automático
+        let currentIndex = 0;
+        const images = document.querySelectorAll('.carousel img');
+
+        function showNextImage() {
+            images[currentIndex].classList.remove('active');
+            currentIndex = (currentIndex + 1) % images.length;
+            images[currentIndex].classList.add('active');
+        }
+
+        setInterval(showNextImage, 3000);
+
+        // Contador de dias juntos
+        const startDate = new Date('2022-01-01'); // Defina a data de início do relacionamento
+        const today = new Date();
+        const daysTogether = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+        document.getElementById('days-together').textContent = daysTogether;
+    </script>
+</body>
+
+</html>
