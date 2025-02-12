@@ -1,42 +1,49 @@
-// Conectar ao servidor WebSocket
-const socket = io('http://localhost:3000');
+// Função para abrir um modal
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'block';
+    }
+}
 
-// Função para carregar as cartas
-function loadLetters(letters) {
-    const letterHistoryContent = document.getElementById('letter-history-content');
-    letterHistoryContent.innerHTML = ''; // Limpar a lista antes de carregar
+// Função para fechar um modal
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
 
-    letters.forEach(letter => {
-        const newLetter = document.createElement('li');
-        newLetter.innerHTML = `
-            <div class="letter-card">
-                <h3>${letter.title}</h3>
-                <p>${letter.content}</p>
-            </div>
-        `;
-        letterHistoryContent.appendChild(newLetter);
+// Função para enviar uma foto
+function uploadPhoto() {
+    const fileInput = document.getElementById('photo-input');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('Por favor, selecione uma foto antes de enviar!');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('foto', file);
+
+    fetch('http://localhost:3000/enviar-foto', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        closeModal('photo-modal');
+        loadPhotos(); // Atualizar o carrossel após enviar a foto
+    })
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao enviar a foto.');
     });
 }
 
-// Quando o cliente se conecta, ele receberá todas as cartas existentes
-socket.on('loadLetters', (letters) => {
-    loadLetters(letters);
-});
-
-// Quando uma nova carta for enviada, todos os clientes recebem ela em tempo real
-socket.on('newLetter', (newLetter) => {
-    const letterHistoryContent = document.getElementById('letter-history-content');
-    const newLetterElement = document.createElement('li');
-    newLetterElement.innerHTML = `
-        <div class="letter-card">
-            <h3>${newLetter.title}</h3>
-            <p>${newLetter.content}</p>
-        </div>
-    `;
-    letterHistoryContent.appendChild(newLetterElement);
-});
-
-// Função para enviar uma carta para o backend
+// Função para enviar uma carta
 function uploadLetter() {
     const letterTitle = document.getElementById('letter-title').value;
     const letterContent = document.getElementById('letter-input').value;
@@ -46,7 +53,7 @@ function uploadLetter() {
         return;
     }
 
-    fetch('http://localhost:3000/enviarCarta', {
+    fetch('http://localhost:3000/enviar-carta', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -59,6 +66,97 @@ function uploadLetter() {
     .then(response => response.json())
     .then(data => {
         alert(data.message);
+        closeModal('letter-modal');
     })
-    .catch(error => console.error('Erro:', error));
+    .catch(error => {
+        console.error('Erro:', error);
+        alert('Erro ao enviar a carta.');
+    });
 }
+
+// Função para alternar a visibilidade do histórico de cartas
+function toggleHistory() {
+    const historyList = document.getElementById('letter-history-list');
+    if (historyList.style.display === 'none') {
+        historyList.style.display = 'block';
+    } else {
+        historyList.style.display = 'none';
+    }
+}
+// Função para carregar as cartas do backend
+async function loadLetters() {
+    try {
+        const response = await fetch('http://localhost:3000/cartas');
+        const cartas = await response.json();
+
+        // Exibir a carta mais recente na seção "Carta do Mês"
+        if (cartas.length > 0) {
+            const monthlyLetter = document.getElementById('monthly-letter');
+            monthlyLetter.innerHTML = `
+                <h3>${cartas[0].titulo}</h3>
+                <p>${cartas[0].conteudo}</p>
+            `;
+        }
+
+        // Exibir todas as cartas no histórico
+        const letterHistoryContent = document.getElementById('letter-history-content');
+        letterHistoryContent.innerHTML = cartas.map(carta => `
+            <li>
+                <div class="letter-card">
+                    <h3>${carta.titulo}</h3>
+                    <p>${carta.conteudo}</p>
+                </div>
+            </li>
+        `).join('');
+    } catch (error) {
+        console.error('Erro ao carregar cartas:', error);
+    }
+}
+
+// Carregar as cartas quando a página for carregada
+window.onload = () => {
+    loadLetters();
+};
+document.addEventListener("DOMContentLoaded", function() {
+    // Defina a data de início (dia do pedido de namoro)
+    const startDate = new Date("2024-09-13");
+
+    // Função para calcular a diferença em dias
+    function calculateDays() {
+        const currentDate = new Date(); // Data de hoje
+        const timeDifference = currentDate - startDate; // Diferença em milissegundos
+        const daysDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24)); // Converter para dias
+
+        // Exibir a quantidade de dias no elemento
+        document.getElementById('days-together').textContent = daysDifference;
+    }
+
+    // Calcular e exibir os dias quando a página for carregada
+    calculateDays();
+});
+
+// Abre o modal de deletar
+function openDeleteModal() {
+    document.getElementById("delete-modal").style.display = "block";
+  }
+  
+  // Fecha o modal de deletar
+  function closeDeleteModal() {
+    document.getElementById("delete-modal").style.display = "none";
+  }
+  
+  // Exclui as cartas selecionadas
+  function deleteSelectedLetters() {
+    // Encontrar as cartas selecionadas (checkboxes marcados)
+    const selectedCheckboxes = document.querySelectorAll('.modal input[type="checkbox"]:checked');
+    
+    // Para cada checkbox selecionado, removemos a carta correspondente
+    selectedCheckboxes.forEach(checkbox => {
+      const letterElement = checkbox.parentElement;
+      letterElement.remove();  // Remover a carta do histórico
+    });
+  
+    // Fechar o modal após a exclusão
+    closeDeleteModal();
+  }
+  

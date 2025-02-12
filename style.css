@@ -14,23 +14,15 @@ h1 {
 }
 
 .carousel-container {
-    position: relative;
-    width: 80%;
-    max-width: 600px;
-    margin: 40px auto;
-}
-
-.carousel {
+    width: 100%;
     display: flex;
-    position: relative;
-    overflow: hidden;
-    height: 400px;
-    justify-content: center;  /* Centraliza as imagens dentro do carrossel */
+    justify-content: center;
+    align-items: center;
 }
 
 .carousel img {
-    position: absolute;
-    width: 100%;
+    display: none; /* Oculta todas as imagens por padrão */
+    width: 80%;
     height: auto;
     max-width: 280px;
     max-height: 340px;
@@ -38,14 +30,16 @@ h1 {
     box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     opacity: 0;
-    transition: opacity 0.8s, transform 0.8s;
+    transition: opacity 0.8s, transform 0.8s, box-shadow 0.5s ease;
+    transform: scale(0.8);
 }
 
 .carousel img.active {
+    display: block; /* Exibe a imagem ativa */
     opacity: 1;
-    transform: rotate(0deg) translateZ(50px);
+    transform: scale(1) translateY(0px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
 }
-
 /* Botões */
 .buttons button, .letter-history button {
     background-color: #ff4081;
@@ -62,7 +56,7 @@ h1 {
     background-color: #e63971;
 }
 
-/* Estilo dos Modais */
+/* Modais */
 .modal {
     display: none;
     position: fixed;
@@ -73,20 +67,20 @@ h1 {
     background-color: rgba(0, 0, 0, 0.5);
     justify-content: center;
     align-items: center;
-    z-index: 1000;  /* Garante que o modal fique sobre os outros elementos */
+    z-index: 1000;
 }
 
 .modal-content {
     background-color: #fff;
-    padding: 15px;  /* Menos padding para deixar mais compacto */
+    padding: 15px;
     border-radius: 10px;
     text-align: left;
-    width: 80%;  /* Largura do modal */
-    max-width: 400px;  /* Largura máxima do modal reduzida */
-    margin: 0 auto;  /* Centraliza o modal */
+    width: 80%;
+    max-width: 400px;
+    margin: 0 auto;
     position: relative;
-    top: 50%;  /* Desloca para o meio verticalmente */
-    transform: translateY(-50%);  /* Ajusta para garantir que o modal fique exatamente no meio da tela */
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .modal-content h2 {
@@ -96,7 +90,7 @@ h1 {
 
 .modal-content input, .modal-content textarea {
     width: 100%;
-    padding: 8px;  /* Menos padding nos campos para ajustá-los ao novo tamanho do modal */
+    padding: 8px;
     margin: 8px 0;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -106,7 +100,7 @@ h1 {
     background-color: #ff4081;
     color: #fff;
     border: none;
-    padding: 8px 15px;  /* Menos padding para os botões */
+    padding: 8px 15px;
     border-radius: 5px;
     cursor: pointer;
 }
@@ -115,13 +109,12 @@ h1 {
     background-color: #e63971;
 }
 
-/* Estilo do botão de fechar (X) */
 .close {
     position: absolute;
     top: 5px;
     right: 5px;
     color: #333;
-    font-size: 1.8em;  /* Tamanho adequado para o X */
+    font-size: 1.8em;
     font-weight: bold;
     cursor: pointer;
 }
@@ -130,7 +123,7 @@ h1 {
     color: #ff4081;
 }
 
-/* Estilo da Carta do Mês */
+/* Carta do Mês */
 .letter-of-the-month {
     width: 90%;
     max-width: 600px;
@@ -140,11 +133,6 @@ h1 {
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-}
-
-.letter-of-the-month h2 {
-    color: #ff4081;
-    margin-top: 0;
 }
 
 .letter-card {
@@ -162,7 +150,7 @@ h1 {
     color: #333;
 }
 
-/* Estilo do Contador de Dias */
+/* Contador de Dias */
 .days-counter {
     text-align: center;
     margin-top: 20px;
@@ -178,7 +166,7 @@ h1 {
     color: #ff4081;
 }
 
-/* Estilo do Histórico de Cartas */
+/* Histórico de Cartas */
 .letter-history {
     width: 90%;
     max-width: 600px;
@@ -207,7 +195,7 @@ h1 {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Estilo dos Botões de Remover */
+/* Botões de Remover */
 .remove-button {
     background-color: #e63971;
     color: #fff;
@@ -223,21 +211,21 @@ h1 {
 }
 
 /* Responsividade */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .carousel-container {
         width: 90%;
     }
 
-    .modal-content {
-        width: 90%;
-        max-width: 350px;  /* Modal ainda mais compacto em telas menores */
-        padding: 12px;  /* Menos padding */
+    .carousel img {
+        width: 100%; /* Ajusta para 100% em telas médias */
+        max-width: 240px; /* Reduz a largura máxima */
+        height: auto;
     }
 
-    .close {
-        top: 5px;
-        right: 5px;
-        font-size: 1.6em;  /* Tamanho ainda menor em telas pequenas */
+    .modal-content {
+        width: 90%;
+        max-width: 350px;
+        padding: 12px;
     }
 
     .letter-of-the-month, .letter-history {
@@ -246,5 +234,58 @@ h1 {
 
     .days-counter h2 {
         font-size: 1.5em;
+    }
+}
+
+@media (max-width: 768px) {
+    .carousel img {
+        width: 100%; /* Ajusta para 100% em telas pequenas */
+        max-width: 300px;
+        height: auto;
+    }
+
+    .modal-content {
+        width: 90%;
+        max-width: 320px; /* Modal ainda mais compacto */
+        padding: 12px;
+    }
+
+    .close {
+        top: 5px;
+        right: 5px;
+        font-size: 1.6em;
+    }
+
+    .letter-of-the-month, .letter-history {
+        width: 100%;
+    }
+
+    .days-counter h2 {
+        font-size: 1.4em;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel img {
+        width: 100%;
+        max-width: 260px;
+    }
+
+    .buttons button, .letter-history button {
+        padding: 8px 16px;
+    }
+
+    .modal-content {
+        width: 90%;
+        max-width: 280px;
+        padding: 10px;
+    }
+
+    .remove-button {
+        padding: 6px 12px;
+    }
+
+    .days-counter h2 {
+        font-size: 1.2em;
     }
 }

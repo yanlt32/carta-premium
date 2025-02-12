@@ -1,70 +1,119 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
-const http = require('http');
-const socketIo = require('socket.io');
+const multer = require('multer');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
+const port = 3000;
 
-// Configurar o servidor HTTP com Express
-const server = http.createServer(app);
-const io = socketIo(server);  // Inicializa o socket.io no servidor
-
-// Configuração do banco de dados SQLite
-const db = new sqlite3.Database(path.join(__dirname, 'cartas.db'), (err) => {
-  if (err) {
-    console.error("Erro ao conectar ao banco de dados SQLite:", err);
-  } else {
-    console.log("Banco de dados SQLite conectado com sucesso.");
-  }
-});
-
-// Criação de uma tabela para armazenar cartas (se não existir)
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS cartas (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      titulo TEXT,
-      conteudo TEXT,
-      data_criacao TEXT
-    )
-  `);
-});
-
-// Rota para salvar cartas
-app.use(express.json());
-
-app.post('/enviarCarta', (req, res) => {
-  const { titulo, conteudo } = req.body;
-  const dataCriacao = new Date().toISOString();
-
-  db.run(
-    'INSERT INTO cartas (titulo, conteudo, data_criacao) VALUES (?, ?, ?)',
-    [titulo, conteudo, dataCriacao],
-    function (err) {
-      if (err) {
-        return res.status(500).send('Erro ao salvar a carta.');
-      }
-
-      // Emitir evento para todos os clientes conectados
-      io.emit('newLetter', { title: titulo, content: conteudo });
-      res.status(200).send({ message: 'Carta enviada com sucesso!' });
-    }
-  );
-});
-
-// Rota para obter as cartas
-app.get('/cartas', (req, res) => {
-  db.all('SELECT * FROM cartas ORDER BY data_criacao DESC', (err, rows) => {
+// Configuração do SQLite
+const db = new sqlite3.Database('./database.db', (err) => {
     if (err) {
-      return res.status(500).send('Erro ao recuperar cartas.');
+        console.error('Erro ao conectar ao banco de dados:', err.message);
+    } else {
+        console.log('Conectado ao banco de dados SQLite.');
     }
-    res.status(200).json(rows);
+});
+
+// Criar tabelas (se não existirem)
+db.serialize(() => {
+    db.run(`
+        CREATE TABLE IF NOT EXISTS cartas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            conteudo TEXT NOT NULL,
+            data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    db.run(`
+        CREATE TABLE IF NOT EXISTS fotos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            caminho TEXT NOT NULL,
+            data_envio TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+});
+
+// Middleware para permitir CORS e JSON
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Configuração do Multer para upload de fotos
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage });
+
+// Rota para enviar cartas
+app.post('/enviar-carta', (req, res) => {
+    const { titulo, conteudo } = req.body;
+
+    console.log('Dados recebidos para envio de carta:', { titulo, conteudo });  // Verifique os dados recebidos
+
+    const query = 'INSERT INTO cartas (titulo, conteudo) VALUES (?, ?)';
+    
+    db.run(query, [titulo, conteudo], function(err) {
+        if (err) {
+            console.error('Erro ao inserir carta:', err);  // Verifique o erro
+            return res.status(500).send(err);
+        }
+        console.log('Carta inserida com sucesso:', { id: this.lastID, titulo, conteudo });  // Verifique o ID e os dados
+        res.status(200).send('Carta enviada com sucesso!');
+    });
+});
+
+// Rota para buscar cartas
+app.get('/cartas', (req, res) => {
+    const query = 'SELECT * FROM cartas ORDER BY data_envio DESC';
+    
+    db.all(query, (err, rows) => {
+        if (err) {
+            console.error('Erro ao buscar cartas:', err);  // Verifique o erro
+            return res.status(500).send(err);
+        }
+        res.status(200).json(rows);
+    });
+});
+
+// Rota para enviar fotos
+app.post('/enviar-foto', upload.single('foto'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: 'Nenhuma foto foi enviada.' });
+    }
+    const caminho = req.file.path;
+    const query = 'INSERT INTO fotos (caminho) VALUES (?)';
+    
+    db.run(query, [caminho], (err) => {
+        if (err) {
+            console.error('Erro ao inserir foto:', err);  // Verifique o erro
+            return res.status(500).send(err);
+        }
+        res.status(200).json({ message: 'Foto enviada com sucesso!', caminho });
+    });
+});
+
+// Rota para buscar fotos
+app.get('/fotos', (req, res) => {
+  const query = 'SELECT * FROM fotos ORDER BY data_envio DESC';
+  
+  db.all(query, (err, rows) => {
+      if (err) {
+          console.error('Erro ao buscar fotos:', err);  // Verifique o erro
+          return res.status(500).send(err);
+      }
+      res.status(200).json(rows);
   });
 });
 
-// Configurar o servidor para ouvir na porta 3000
-const PORT = 3000;
-server.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+// Iniciar o servidor
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
 });
