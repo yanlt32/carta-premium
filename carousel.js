@@ -18,5 +18,5 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     showImage(currentIndex);
-    setInterval(nextPhoto, 3000); // Avança a cada 3 segundos
+    setInterval(nextPhoto, 2000); // Avança a cada 3 segundos
 });

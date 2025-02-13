@@ -117,3 +117,23 @@ app.get('/fotos', (req, res) => {
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
 });
+
+app.delete('/cartas/:id', async (req, res) => {
+    const cartaId = parseInt(req.params.id, 10);
+
+    db.get('SELECT * FROM cartas WHERE id = ?', [cartaId], (err, row) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: 'Erro ao buscar carta: ' + err.message });
+        }
+        if (!row) {
+            return res.status(404).json({ success: false, message: 'Carta não encontrada.' });
+        }
+
+        db.run('DELETE FROM cartas WHERE id = ?', [cartaId], function(err) {
+            if (err) {
+                return res.status(500).json({ success: false, message: 'Erro ao deletar carta: ' + err.message });
+            }
+            res.json({ success: true, message: 'Carta deletada com sucesso!' });
+        });
+    });
+});

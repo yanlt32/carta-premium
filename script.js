@@ -105,6 +105,7 @@ async function loadLetters() {
                 <div class="letter-card">
                     <h3>${carta.titulo}</h3>
                     <p>${carta.conteudo}</p>
+                    <button onclick="deleteLetter('${carta.id}')">Deletar</button>
                 </div>
             </li>
         `).join('');
@@ -113,6 +114,56 @@ async function loadLetters() {
     }
 }
 
+// Função para carregar as cartas do backend
+async function loadLetters() {
+    try {
+        const response = await fetch('http://localhost:3000/cartas');
+        const cartas = await response.json();
+
+        // Exibir a carta mais recente na seção "Carta do Mês"
+        if (cartas.length > 0) {
+            const monthlyLetter = document.getElementById('monthly-letter');
+            monthlyLetter.innerHTML = `
+                <h3>${cartas[0].titulo}</h3>
+                <p>${cartas[0].conteudo}</p>
+            `;
+        }
+
+        // Exibir todas as cartas no histórico
+        const letterHistoryContent = document.getElementById('letter-history-content');
+        letterHistoryContent.innerHTML = cartas.map(carta => `
+            <li>
+                <div class="letter-card">
+                    <h3>${carta.titulo}</h3>
+                    <p>${carta.conteudo}</p>
+                    <button onclick="deleteLetter('${carta.id}')">Deletar</button>
+                </div>
+            </li>
+        `).join('');
+    } catch (error) {
+        console.error('Erro ao carregar cartas:', error);
+    }
+}
+
+// Função para deletar uma carta
+async function deleteLetter(cartaId) {
+    try {
+        const response = await fetch(`http://localhost:3000/cartas/${cartaId}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Carta deletada com sucesso!');
+            loadLetters(); // Recarregar as cartas após deletar
+        } else {
+            alert('Erro ao deletar a carta.');
+        }
+    } catch (error) {
+        console.error('Erro ao deletar carta:', error);
+        alert('Erro ao deletar a carta.');
+    }
+}
 // Carregar as cartas quando a página for carregada
 window.onload = () => {
     loadLetters();
@@ -135,28 +186,3 @@ document.addEventListener("DOMContentLoaded", function() {
     calculateDays();
 });
 
-// Abre o modal de deletar
-function openDeleteModal() {
-    document.getElementById("delete-modal").style.display = "block";
-  }
-  
-  // Fecha o modal de deletar
-  function closeDeleteModal() {
-    document.getElementById("delete-modal").style.display = "none";
-  }
-  
-  // Exclui as cartas selecionadas
-  function deleteSelectedLetters() {
-    // Encontrar as cartas selecionadas (checkboxes marcados)
-    const selectedCheckboxes = document.querySelectorAll('.modal input[type="checkbox"]:checked');
-    
-    // Para cada checkbox selecionado, removemos a carta correspondente
-    selectedCheckboxes.forEach(checkbox => {
-      const letterElement = checkbox.parentElement;
-      letterElement.remove();  // Remover a carta do histórico
-    });
-  
-    // Fechar o modal após a exclusão
-    closeDeleteModal();
-  }
-  
