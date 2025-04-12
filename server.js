@@ -3,10 +3,18 @@ const sqlite3 = require('sqlite3').verbose();
 const multer = require('multer');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000; // Porta dinâmica para Render
 
+// Criação do diretório uploads, caso não exista
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+// Servindo arquivos estáticos
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuração do SQLite
@@ -46,13 +54,26 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Configuração do Multer para upload de fotos
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
-const upload = multer({ storage });
+
+// Verificação do tipo de arquivo para permitir apenas imagens
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        const fileTypes = /jpeg|jpg|png|gif/;
+        const mimeType = fileTypes.test(file.mimetype);
+        const extName = fileTypes.test(path.extname(file.originalname).toLowerCase());
+        if (mimeType && extName) {
+            return cb(null, true);
+        }
+        cb('Erro: Arquivo não suportado.');
+    }
+});
 
 // Rota para página inicial (necessário pro Render não dar 404)
 app.get('/', (req, res) => {
