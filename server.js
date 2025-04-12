@@ -5,7 +5,9 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000; // Porta dinâmica para Render
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Configuração do SQLite
 const db = new sqlite3.Database('./database.db', (err) => {
@@ -36,7 +38,7 @@ db.serialize(() => {
     `);
 });
 
-// Middleware para permitir CORS e JSON
+// Middlewares
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -52,20 +54,21 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Rota para página inicial (necessário pro Render não dar 404)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Rota para enviar cartas
 app.post('/enviar-carta', (req, res) => {
     const { titulo, conteudo } = req.body;
 
-    console.log('Dados recebidos para envio de carta:', { titulo, conteudo });  // Verifique os dados recebidos
-
     const query = 'INSERT INTO cartas (titulo, conteudo) VALUES (?, ?)';
-    
     db.run(query, [titulo, conteudo], function(err) {
         if (err) {
-            console.error('Erro ao inserir carta:', err);  // Verifique o erro
+            console.error('Erro ao inserir carta:', err);
             return res.status(500).send(err);
         }
-        console.log('Carta inserida com sucesso:', { id: this.lastID, titulo, conteudo });  // Verifique o ID e os dados
         res.status(200).send('Carta enviada com sucesso!');
     });
 });
@@ -73,52 +76,17 @@ app.post('/enviar-carta', (req, res) => {
 // Rota para buscar cartas
 app.get('/cartas', (req, res) => {
     const query = 'SELECT * FROM cartas ORDER BY data_envio DESC';
-    
     db.all(query, (err, rows) => {
         if (err) {
-            console.error('Erro ao buscar cartas:', err);  // Verifique o erro
+            console.error('Erro ao buscar cartas:', err);
             return res.status(500).send(err);
         }
         res.status(200).json(rows);
     });
 });
 
-// Rota para enviar fotos
-app.post('/enviar-foto', upload.single('foto'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: 'Nenhuma foto foi enviada.' });
-    }
-    const caminho = req.file.path;
-    const query = 'INSERT INTO fotos (caminho) VALUES (?)';
-    
-    db.run(query, [caminho], (err) => {
-        if (err) {
-            console.error('Erro ao inserir foto:', err);  // Verifique o erro
-            return res.status(500).send(err);
-        }
-        res.status(200).json({ message: 'Foto enviada com sucesso!', caminho });
-    });
-});
-
-// Rota para buscar fotos
-app.get('/fotos', (req, res) => {
-  const query = 'SELECT * FROM fotos ORDER BY data_envio DESC';
-  
-  db.all(query, (err, rows) => {
-      if (err) {
-          console.error('Erro ao buscar fotos:', err);  // Verifique o erro
-          return res.status(500).send(err);
-      }
-      res.status(200).json(rows);
-  });
-});
-
-// Iniciar o servidor
-app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`);
-});
-
-app.delete('/cartas/:id', async (req, res) => {
+// Rota para deletar carta
+app.delete('/cartas/:id', (req, res) => {
     const cartaId = parseInt(req.params.id, 10);
 
     db.get('SELECT * FROM cartas WHERE id = ?', [cartaId], (err, row) => {
@@ -136,4 +104,38 @@ app.delete('/cartas/:id', async (req, res) => {
             res.json({ success: true, message: 'Carta deletada com sucesso!' });
         });
     });
+});
+
+// Rota para enviar foto
+app.post('/enviar-foto', upload.single('foto'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: 'Nenhuma foto foi enviada.' });
+    }
+    const caminho = req.file.path;
+    const query = 'INSERT INTO fotos (caminho) VALUES (?)';
+
+    db.run(query, [caminho], (err) => {
+        if (err) {
+            console.error('Erro ao inserir foto:', err);
+            return res.status(500).send(err);
+        }
+        res.status(200).json({ message: 'Foto enviada com sucesso!', caminho });
+    });
+});
+
+// Rota para buscar fotos
+app.get('/fotos', (req, res) => {
+    const query = 'SELECT * FROM fotos ORDER BY data_envio DESC';
+    db.all(query, (err, rows) => {
+        if (err) {
+            console.error('Erro ao buscar fotos:', err);
+            return res.status(500).send(err);
+        }
+        res.status(200).json(rows);
+    });
+});
+
+// Iniciar o servidor
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`);
 });
