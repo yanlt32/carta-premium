@@ -67,6 +67,7 @@ function uploadLetter() {
     .then(data => {
         alert(data.message);
         closeModal('letter-modal');
+        loadLetters(); // Recarregar cartas após enviar
     })
     .catch(error => {
         console.error('Erro:', error);
@@ -81,36 +82,6 @@ function toggleHistory() {
         historyList.style.display = 'block';
     } else {
         historyList.style.display = 'none';
-    }
-}
-// Função para carregar as cartas do backend
-async function loadLetters() {
-    try {
-        const response = await fetch('http://localhost:3000/cartas');
-        const cartas = await response.json();
-
-        // Exibir a carta mais recente na seção "Carta do Mês"
-        if (cartas.length > 0) {
-            const monthlyLetter = document.getElementById('monthly-letter');
-            monthlyLetter.innerHTML = `
-                <h3>${cartas[0].titulo}</h3>
-                <p>${cartas[0].conteudo}</p>
-            `;
-        }
-
-        // Exibir todas as cartas no histórico
-        const letterHistoryContent = document.getElementById('letter-history-content');
-        letterHistoryContent.innerHTML = cartas.map(carta => `
-            <li>
-                <div class="letter-card">
-                    <h3>${carta.titulo}</h3>
-                    <p>${carta.conteudo}</p>
-                    <button onclick="deleteLetter('${carta.id}')">Deletar</button>
-                </div>
-            </li>
-        `).join('');
-    } catch (error) {
-        console.error('Erro ao carregar cartas:', error);
     }
 }
 
@@ -164,10 +135,13 @@ async function deleteLetter(cartaId) {
         alert('Erro ao deletar a carta.');
     }
 }
+
 // Carregar as cartas quando a página for carregada
 window.onload = () => {
     loadLetters();
 };
+
+// Função para calcular a diferença de dias
 document.addEventListener("DOMContentLoaded", function() {
     // Defina a data de início (dia do pedido de namoro)
     const startDate = new Date("2024-09-13");
@@ -185,4 +159,3 @@ document.addEventListener("DOMContentLoaded", function() {
     // Calcular e exibir os dias quando a página for carregada
     calculateDays();
 });
-
